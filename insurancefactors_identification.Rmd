@@ -1,0 +1,136 @@
+# INSURANCE FACTORS IDENTIFICATION
+## The data gives the details of third party motor insurance claims
+#in Sweden for the year 1977. In Sweden, all motor insurance companies
+# apply identical risk arguments to classify customers, and thus their portfolios 
+# and their claims statistics can be combined. 
+# The data were compiled by a Swedish Committee on
+# the Analysis of Risk Premium in Motor Insurance. 
+# The Committee was asked to look into the problem of
+# analyzing the real influence on the claims of the
+# risk arguments and to compare this structure with 
+# the actual tariff.
+# Domain: Insurance
+
+# Insured: The number of insured in policy-years.
+# Claims: Number of claims
+# Payment: The total value of payments in Skr (Swedish Krona)
+
+
+## 1.Import data into R environment
+## Importing Data 
+data <- read.csv("C:/Users/nawin/Insurance_factor_identification.csv")
+## Printing Dataset
+print(data)
+
+## Printing column names
+colnames(data)
+## Column names are Kilometres,Zone,Bonus,Make,Insured,Claims,Payment. 
+
+##  Printing rows and columns 
+print(ncol(data))
+## observation: There are 7 columns
+print(nrow(data))
+## observation: There are 2182 rows
+
+#Manipulating column names
+names(data)<- stri_replace_all(regex =  "\\.",replacement = "",str =names(data))
+head(data)
+
+## Finding the missing values
+# find location of missing values
+print("Position of missing values:")
+which(is.na(data))
+# Count total missing values 
+print("Count of total missing values:")
+sum(is.na(data))
+## Observation: There are no missing values
+
+##1. The committee is interested to know each field of the data collected through descriptive analysis to gain basic insights into the data set 
+#    and to prepare for further analysis.  
+summary(data)
+
+##2. The total value of payment by an insurance company is an important factor to be monitored. So the committee has decided to find
+#    whether this payment is related to the number of claims and the number of insured policy years. They also want
+#    to visualize the results for better understanding. 
+
+# Linear Regression
+lm1<-lm(data$Payment~data$Claims+data$Insured)
+lm1
+# Observation:
+# Coefficients:
+#(Intercept)   data$Claims  data$Insured  
+# 3250.74       4294.77         28.39 
+summary(lm1)
+# Observation: 
+# Residual standard error: 71270 on 2179 degrees of freedom
+# Multiple R-squared:  0.9951,	Adjusted R-squared:  0.9951 
+# F-statistic: 2.211e+05 on 2 and 2179 DF,  p-value: < 2.2e-16
+
+# correlation between claims and payment
+cor(data$Claims,data$Payment)
+# Observation: 0.99 percent correlated
+
+# Plotting claims and Payment
+plot(data$Claims,data$Payment)
+
+# correlation between claims and payment
+cor(data$Insured,data$Payment)
+# Observation: 0.93 percent correlated
+
+# Plotting claims and Payment
+plot(data$Insured,data$Payment)
+
+##3. The committee wants to figure out the reasons for insurance payment 
+# increase and decrease. So they have decided to find whether distance, location,
+# bonus, make, and insured amount or claims are affecting the payment or all or some
+# of these are affecting it. 
+# Linear Regression
+lm2<-lm(data$Payment~.,data=data)
+summary(lm2)
+# Observation: 
+# Bonus and Make have p values greater than 0.05 are not significant variables
+# Kilometres,Zone,Insured,Claims have p values less than 0.05 , so significant variables.
+# Residual standard error: 70830 on 2175 degrees of freedom
+# Multiple R-squared:  0.9952,	Adjusted R-squared:  0.9952 
+# F-statistic: 7.462e+04 on 6 and 2175 DF,  p-value: < 2.2e-16
+
+##4.The insurance company is planning to establish a new branch office, so they are interested 
+# to find at what location, kilometre, and bonus level their insured amount,
+# claims, and payment gets increased. (Hint: Aggregate Dataset)
+
+pay_inc<-apply(data[,c(5,6,7)],2,function(x)tapply(x,data$Kilometres,mean))
+pay_inc
+# Observation:
+# Insured   Claims   Payment
+# 1 1837.8163 75.59453 361899.35
+# 2 1824.0288 89.27664 442523.78
+# 3 1081.9714 54.16100 272012.58
+# 4  398.9632 20.79493 108213.41
+# 5  284.9475 18.04215  93306.12
+# 442523 is maximum payment
+
+bonus_inc<-apply(data[,c(5,6,7)],2,function(x)tapply(x,data$Bonus,mean))
+bonus_inc
+# Observation:
+# Insured    Claims   Payment
+# 1  525.5502  62.50489 282921.99
+# 2  451.0754  34.23397 163316.62
+# 3  397.4737  24.97419 122656.17
+# 4  360.3867  20.35161  98498.12
+# 5  437.3936  22.82109 108790.50
+# 6  805.8167  39.94286 197723.82
+# 7 4620.3728 157.22222 819322.48
+# Maximum Payment is 28291.99
+
+##5.The committee wants to understand what affects their claim rates so as to decide the right premiums for a certain set of situations. 
+# Hence, they need to find whether the insured amount, zone, kilometre, bonus, or make affects the claim rates and to what extent. 
+# Linear Regression
+reg<-lm(Claims~Kilometres+Zone+Bonus+Make+Insured,data=data)
+summary(reg)
+# Observation:
+# Zone has p value more than 0.05, so not significant variables.
+# p values of Kilometres, Bonus, Make, Insured are less than 0.05 , so significant making impact on claims.
+
+
+
+
